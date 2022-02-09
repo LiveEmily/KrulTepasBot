@@ -3,11 +3,28 @@ using Discord.WebSocket;
 
 namespace ChocolaBot {
     public class commands {
-        public static Task ping(ref SocketUserMessage message) {
+        static Emoji heart = new Emoji("\u2665");
+        public static async Task ping(SocketUserMessage message) {
             var cb = new ComponentBuilder().WithButton("Click me!", "ping", ButtonStyle.Primary);
-            message.Channel.SendMessageAsync("pong!", components: cb.Build());
+            await message.ReplyAsync("pong!", components: cb.Build(), allowedMentions: AllowedMentions.None);
+        }
 
-            return Task.CompletedTask;
+        public static async Task avatar(SocketUserMessage message) {
+            var avatarEmbed = new EmbedBuilder {
+                Title = message.Author.Username,
+                ImageUrl = message.Author.GetAvatarUrl()
+            };
+
+            var msg = await message.ReplyAsync(embed: avatarEmbed.Build(), allowedMentions: AllowedMentions.None);
+
+            await msg.AddReactionAsync(heart);
+        }
+
+        public static async Task button(SocketUserMessage message) {
+            var content = message.Content.Split(' ');
+            var cb = new ComponentBuilder().WithButton(content[1], content[2], ButtonStyle.Primary);
+            await message.Channel.SendMessageAsync(content[3], components: cb.Build());
+            await message.DeleteAsync();
         }
     }
 }

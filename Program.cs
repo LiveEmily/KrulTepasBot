@@ -39,7 +39,7 @@ namespace ChocolaBot {
             if(message == null) return;
 
             int argPos = 0;
-            string msg = message.Content.TrimStart('!');
+            var msg = message.Content.TrimStart('!').Split(' ');
 
             if(!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)) || message.Author.IsBot) return;
 
@@ -52,10 +52,18 @@ namespace ChocolaBot {
                 await message.Channel.SendMessageAsync("pong!", components: cb.Build());
             }*/
 
-            switch(msg) {
+            switch(msg[0]) {
                 case "ping":
-                    await commands.ping(ref message);
-                break;
+                    await commands.ping(message);
+                    break;
+                case "avatar":
+                    await commands.avatar(message);
+                    break;
+                case "button":
+                    await commands.button(message);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -66,7 +74,19 @@ namespace ChocolaBot {
                         x.Content = $"Thank you {component.User.Mention} for clicking my button!";
                         x.Components = new ComponentBuilder().WithButton("Thank you!", "success", ButtonStyle.Success, disabled: true).Build();
                     });
-                break;
+                    break;
+                case "button":
+                    await component.UpdateAsync(x => {
+                        x.Content = $"Thank you {component.User.Mention} for clicking my button!";
+                        x.Components = new ComponentBuilder().WithButton("Thank you!", "success", ButtonStyle.Success, disabled: true).Build();
+                    });
+                    break;
+                default:
+                    await component.UpdateAsync(x => {
+                        x.Content = $"Thank you {component.User.Mention} for clicking my button!";
+                        x.Components = new ComponentBuilder().WithButton("Thank you!", "success", ButtonStyle.Success, disabled: true).Build();
+                    });
+                    break;
             }
         }
 
