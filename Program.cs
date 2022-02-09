@@ -1,10 +1,6 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+﻿using Discord;
 using Discord.Commands;
-
+using Discord.WebSocket;
 
 namespace ChocolaBot {
     class Program {
@@ -16,6 +12,7 @@ namespace ChocolaBot {
             _client.Ready += ReadyAsync;
             _client.MessageReceived += MessageReceivedAsync;
             _client.InteractionCreated += InteractionCreatedAsync;
+            _client.ButtonExecuted += ButtonHandler;
         }
 
         public async Task MainAsync() {
@@ -26,42 +23,56 @@ namespace ChocolaBot {
             await Task.Delay(Timeout.Infinite);
         }
 
-        private Task LogAsync(LogMessage log)
-        {
+        private Task LogAsync(LogMessage log) {
             Console.WriteLine(log.ToString());
             return Task.CompletedTask;
         }
 
-        private Task ReadyAsync()
-        {
+        private Task ReadyAsync() {
             Console.WriteLine($"{_client.CurrentUser} is connected!");
 
             return Task.CompletedTask;
         }
 
-        private async Task MessageReceivedAsync(SocketMessage message)
-        {
-            if (message.Author.Id == _client.CurrentUser.Id)
-                return;
+        private async Task MessageReceivedAsync(SocketMessage messageParam) {
+            var message = messageParam as SocketUserMessage;
+            if(message == null) return;
+
+            int argPos = 0;
+            string msg = message.Content.TrimStart('!');
+
+            if(!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)) || message.Author.IsBot) return;
+
+            if(message.Author.Id == _client.CurrentUser.Id) return;
 
 
-            if (message.Content == "!ping")
-            {
-                var cb = new ComponentBuilder()
-                    .WithButton("Click me!", "unique-id", ButtonStyle.Primary);
+            /*if(msg == "ping") {
+                var cb = new ComponentBuilder().WithButton("Click me!", "ping", ButtonStyle.Primary);
 
                 await message.Channel.SendMessageAsync("pong!", components: cb.Build());
+            }*/
+
+            switch(msg) {
+                case "ping":
+                    await commands.ping(ref message);
+                break;
             }
         }
 
-        private async Task InteractionCreatedAsync(SocketInteraction interaction)
-        {
-            if (interaction is SocketMessageComponent component)
-            {
-                if (component.Data.CustomId == "unique-id")
-                    await interaction.RespondAsync("Thank you for clicking my button!");
-                else Console.WriteLine("An ID has been received that has no handler!");
+        private async Task ButtonHandler(SocketMessageComponent component) {
+            switch(component.Data.CustomId) {
+                case "ping":
+                    await component.UpdateAsync(x => {
+                        x.Content = $"Thank you {component.User.Mention} for clicking my button!";
+                        x.Components = new ComponentBuilder().WithButton("Thank you!", "success", ButtonStyle.Success, disabled: true).Build();
+                    });
+                break;
             }
+        }
+
+        private Task InteractionCreatedAsync(SocketInteraction interaction) {
+            //(TODO) Fill this in
+            return Task.CompletedTask;
         }
     }
 }
