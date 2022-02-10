@@ -3,11 +3,11 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Data.SQLite;
 
-namespace ChocolaBot {
+namespace KrulTepasBot {
     class Program {
         private readonly DiscordSocketClient _client = new DiscordSocketClient();
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
-        private static string db = @"URI=file:chocola";
+        private static string db = @"URI=file:krultepas";
         private static SQLiteConnection con = new SQLiteConnection(db);
 
         public Program() {
@@ -26,7 +26,7 @@ namespace ChocolaBot {
             cmd.CommandText = @"CREATE TABLE IF NOT EXISTS users(userId INT PRIMARY KEY, lvl INT NOT NULL, exp INT NOT NULL, totalExp INT NOT NULL, time INT NOT NULL)";
             await cmd.ExecuteNonQueryAsync();
 
-            await _client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("chocolatoken"));
+            await _client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("krultepastoken"));
             await _client.StartAsync();
 
             await Task.Delay(Timeout.Infinite);

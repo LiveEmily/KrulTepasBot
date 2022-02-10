@@ -1,7 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 
-namespace ChocolaBot {
+namespace KrulTepasBot {
     public class commands {
         static Emoji heart = new Emoji("\u2665");
         public static async Task ping(SocketUserMessage message) {
