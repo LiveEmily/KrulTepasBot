@@ -27,8 +27,23 @@ namespace ChocolaBot {
             await message.DeleteAsync();
         }
 
-        public static async Task level(SocketUserMessage message, int userLevel, int userExp) {
-            await message.ReplyAsync($"You are currently level {userLevel} and you have {userExp} exp!");
+        public static async Task level(SocketUserMessage message, int userLevel, int userExp, int userTotalExp, Int32 userTime, Int32 currentTime) {
+            int secs = (180 - (currentTime - userTime));
+            int min = secs / 60;
+            String time = $"You can gain exp again in {secs.ToString()} seconds";
+            if(min > 0 && secs <= 0) {
+                time = $"You can gain exp again in {min.ToString()}:00";
+            }
+            else if(min > 0 && secs < 10) {
+                time = $"You can gain exp again in {min.ToString()}:0{(secs - (min * 60)).ToString()}";
+            }
+            else if(min > 0 && secs > 10) {
+                time = $"You can gain exp again in {min.ToString()}:{(secs - (min * 60)).ToString()}";
+            }
+            else {
+                time = "You just gained exp";
+            }
+            await message.ReplyAsync($"You are currently level {userLevel}!\nYou need {100 - userExp} more exp to level up! | You have a total of {userTotalExp} acquired already!\n{time}!");
             /*cmd.CommandText = $"SELECT lvl FROM users WHERE userId = {message.Author.Id}";
             using(var reader = cmd.ExecuteReader()) {
                 while(reader.Read()) {

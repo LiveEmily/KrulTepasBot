@@ -79,7 +79,7 @@ namespace ChocolaBot {
                 if(userExp >= 100) {
                     userLevel++;
                     userTotalExp = userTotalExp + userExp;
-                    userExp = 0;
+                    userExp = userTotalExp - ((userLevel - 1) * 100);
                 }
                 else {
                     userTotalExp = userTotalExp + userExp;
@@ -115,7 +115,7 @@ namespace ChocolaBot {
                     await commands.button(message);
                     break;
                 case "level":
-                    await commands.level(message, userLevel, userExp);
+                    await commands.level(message, userLevel, userExp, userTotalExp, userTime, currentTime);
                     break;
                 default:
                     break;
