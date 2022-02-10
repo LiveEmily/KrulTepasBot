@@ -56,13 +56,26 @@ namespace KrulTepasBot {
             if(message == null || message.Author.IsBot) return;
             SQLiteCommand cmd = new SQLiteCommand(con);
 
-            cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time) VALUES({message.Author.Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime})";
+
+            if(message.MentionedUsers.Count > 0) {
+                cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time) VALUES({message.MentionedUsers.First().Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime})";
+            }
+            else {
+                cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time) VALUES({message.Author.Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime})";
+            }
+            
             await cmd.ExecuteNonQueryAsync();
 
             var rnd = new Random();
             int exp = rnd.Next(5, 10);
 
-            cmd.CommandText = $"SELECT * FROM users WHERE userId = {message.Author.Id}";
+            if(message.MentionedUsers.Count > 0) {
+                cmd.CommandText = $"SELECT * FROM users WHERE userId = {message.MentionedUsers.First().Id}";
+            }
+            else {
+                cmd.CommandText = $"SELECT * FROM users WHERE userId = {message.Author.Id}";
+            }
+            
             SQLiteDataReader rdr = cmd.ExecuteReader();
             while(rdr.Read())
             {
@@ -85,7 +98,12 @@ namespace KrulTepasBot {
                     userTotalExp = userTotalExp + userExp;
                 }
 
-                cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime} WHERE userId = {message.Author.Id}";
+                if(message.MentionedUsers.Count > 0) {
+                    cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime} WHERE userId = {message.MentionedUsers.First().Id}";
+                }
+                else {
+                    cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime} WHERE userId = {message.Author.Id}";
+                }
                 await cmd.PrepareAsync();
                 await cmd.ExecuteNonQueryAsync();
             }

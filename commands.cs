@@ -10,10 +10,15 @@ namespace KrulTepasBot {
         }
 
         public static async Task avatar(SocketUserMessage message) {
-            var avatarEmbed = new EmbedBuilder {
-                Title = message.Author.Username,
-                ImageUrl = message.Author.GetAvatarUrl()
-            };
+            EmbedBuilder avatarEmbed = new EmbedBuilder();
+            if(message.MentionedUsers.Count > 0) {
+                avatarEmbed.Title = message.MentionedUsers.First().Username;
+                avatarEmbed.ImageUrl = message.MentionedUsers.First().GetAvatarUrl();
+            }
+            else {
+                avatarEmbed.Title = message.Author.Username;
+                avatarEmbed.ImageUrl = message.Author.GetAvatarUrl();
+            }
 
             var msg = await message.ReplyAsync(embed: avatarEmbed.Build(), allowedMentions: AllowedMentions.None);
 
@@ -30,28 +35,44 @@ namespace KrulTepasBot {
         public static async Task level(SocketUserMessage message, int userLevel, int userExp, int userTotalExp, Int32 userTime, Int32 currentTime) {
             int secs = (180 - (currentTime - userTime));
             int min = secs / 60;
-            String time = $"You can gain exp again in {secs.ToString()} seconds";
-            if(min > 0 && secs <= 0) {
-                time = $"You can gain exp again in {min.ToString()}:00";
-            }
-            else if(min > 0 && secs < 10) {
-                time = $"You can gain exp again in {min.ToString()}:0{(secs - (min * 60)).ToString()}";
-            }
-            else if(min > 0 && secs > 10) {
-                time = $"You can gain exp again in {min.ToString()}:{(secs - (min * 60)).ToString()}";
+            String time;
+
+            if(message.MentionedUsers.Count > 0) {
+                if(min > 0 && (secs - (min * 60)) <= 0) {
+                    time = $"{message.MentionedUsers.First().Username} can gain exp again in {min.ToString()}:00";
+                }
+                else if(min > 0 && (secs - (min * 60)) < 10) {
+                    time = $"{message.MentionedUsers.First().Username} can gain exp again in {min.ToString()}:0{(secs - (min * 60)).ToString()}";
+                }
+                else if(min > 0 && (secs - (min * 60)) > 10) {
+                    time = $"{message.MentionedUsers.First().Username} can gain exp again in {min.ToString()}:{(secs - (min * 60)).ToString()}";
+                }
+                else if(min <= 0 && (secs - (min * 60)) > 0) {
+                    time = $"{message.MentionedUsers.First().Username} can gain exp again in {secs.ToString()} seconds";
+                }
+                else {
+                    time = $"{message.MentionedUsers.First().Username} can gain exp!";
+                }
+                await message.ReplyAsync($"{message.MentionedUsers.First().Username} is currently level {userLevel}!\n{message.MentionedUsers.First().Username} needs {100 - userExp} more exp to level up! | {message.MentionedUsers.First().Username} has a total of {userTotalExp} acquired already!\n{time}!", allowedMentions: AllowedMentions.None);
             }
             else {
-                time = "You just gained exp";
-            }
-            await message.ReplyAsync($"You are currently level {userLevel}!\nYou need {100 - userExp} more exp to level up! | You have a total of {userTotalExp} acquired already!\n{time}!");
-            /*cmd.CommandText = $"SELECT lvl FROM users WHERE userId = {message.Author.Id}";
-            using(var reader = cmd.ExecuteReader()) {
-                while(reader.Read()) {
-                    var userLevel = reader.GetInt16(0);
-
-                    await message.ReplyAsync($"Your level is: {userLevel}");
+                if(min > 0 && (secs - (min * 60)) <= 0) {
+                    time = $"You can gain exp again in {min.ToString()}:00";
                 }
-            }*/
+                else if(min > 0 && (secs - (min * 60)) < 10) {
+                    time = $"You can gain exp again in {min.ToString()}:0{(secs - (min * 60)).ToString()}";
+                }
+                else if(min > 0 && (secs - (min * 60)) > 10) {
+                    time = $"You can gain exp again in {min.ToString()}:{(secs - (min * 60)).ToString()}";
+                }
+                else if(min <= 0 && (secs - (min * 60)) > 0) {
+                    time = $"You can gain exp again in {secs.ToString()} seconds";
+                }
+                else {
+                    time = "You just gained exp";
+                }
+                await message.ReplyAsync($"You are currently level {userLevel}!\nYou need {100 - userExp} more exp to level up! | You have a total of {userTotalExp} acquired already!\n{time}!", allowedMentions: AllowedMentions.None);
+            }
         }
     }
 }
