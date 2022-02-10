@@ -26,5 +26,17 @@ namespace ChocolaBot {
             await message.Channel.SendMessageAsync(content[3], components: cb.Build());
             await message.DeleteAsync();
         }
+
+        public static async Task level(SocketUserMessage message, int userLevel, int userExp) {
+            await message.ReplyAsync($"You are currently level {userLevel} and you have {userExp} exp!");
+            /*cmd.CommandText = $"SELECT lvl FROM users WHERE userId = {message.Author.Id}";
+            using(var reader = cmd.ExecuteReader()) {
+                while(reader.Read()) {
+                    var userLevel = reader.GetInt16(0);
+
+                    await message.ReplyAsync($"Your level is: {userLevel}");
+                }
+            }*/
+        }
     }
 }
