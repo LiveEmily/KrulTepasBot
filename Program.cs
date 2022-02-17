@@ -10,6 +10,9 @@ namespace KrulTepasBot {
         private static string db = @"URI=file:krultepas";
         private static SQLiteConnection con = new SQLiteConnection(db);
 
+        static Emoji heart = new Emoji("\u2665");
+        static Emoji tada = new Emoji("\U0001f389");
+
         public Program() {
             _client.Log += LogAsync;
             _client.Ready += ReadyAsync;
@@ -33,12 +36,12 @@ namespace KrulTepasBot {
         }
 
         private Task LogAsync(LogMessage log) {
-            Console.WriteLine(log.ToString());
+            Console.WriteLine($"\u001b[38;5;246m{log.ToString()}\u001b[0m");
             return Task.CompletedTask;
         }
 
         private Task ReadyAsync() {
-            Console.WriteLine($"{_client.CurrentUser} is connected!");
+            Console.WriteLine($"\u001b[31m{_client.CurrentUser} \u001b[0mis connected!");
 
             return Task.CompletedTask;
         }
@@ -47,10 +50,14 @@ namespace KrulTepasBot {
             int userLevel = 1;
             int userExp = 0;
             int userTotalExp = 0;
+            bool claimed = false;
+            Int32 claimedTime = 0;
+            Int32 userTokens = 0;
+            String day = DateTime.Now.ToString("dd");
             String hour = DateTime.Now.ToString("HH");
             String min = DateTime.Now.ToString("mm");
             String sec = DateTime.Now.ToString("ss");
-            Int32 currentTime = (Int32.Parse(hour) * 3600) + (Int32.Parse(min) * 60) + Int32.Parse(sec);
+            Int32 currentTime = (Int32.Parse(day) * 86400) + (Int32.Parse(hour) * 3600) + (Int32.Parse(min) * 60) + Int32.Parse(sec);
             Int32 userTime = 0;
             var message = messageParam as SocketUserMessage;
             if(message == null || message.Author.IsBot) return;
@@ -58,16 +65,17 @@ namespace KrulTepasBot {
 
 
             if(message.MentionedUsers.Count > 0) {
-                cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time) VALUES({message.MentionedUsers.First().Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime})";
+                cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time, tokens, claimedTime) VALUES({message.MentionedUsers.First().Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime}, {userTokens}, {claimedTime})";
             }
             else {
-                cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time) VALUES({message.Author.Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime})";
+                cmd.CommandText = $"INSERT OR IGNORE INTO users(userId, lvl, exp, totalExp, time, tokens, claimedTime) VALUES({message.Author.Id}, {userLevel}, {userExp}, {userTotalExp}, {userTime}, {userTokens}, {claimedTime})";
             }
             
             await cmd.ExecuteNonQueryAsync();
 
             var rnd = new Random();
             int exp = rnd.Next(5, 10);
+            int tokens = rnd.Next(10, 50);
 
             if(message.MentionedUsers.Count > 0) {
                 cmd.CommandText = $"SELECT * FROM users WHERE userId = {message.MentionedUsers.First().Id}";
@@ -83,8 +91,21 @@ namespace KrulTepasBot {
                 userExp = rdr.GetInt16(2);
                 userTotalExp = rdr.GetInt16(3);
                 userTime = rdr.GetInt32(4);
+                userTokens = rdr.GetInt32(5);
+                claimedTime = rdr.GetInt32(6);
             }
             await rdr.CloseAsync();
+
+            Console.WriteLine($"{userTokens}");
+            Console.WriteLine($"{claimedTime} | {userTime} | {currentTime}");
+
+            if(claimedTime + 86400 >= currentTime) {
+                return;
+            }
+
+            if(userTime > currentTime) {
+                userTime = currentTime - 180;
+            }
 
             if(currentTime - 180 >= userTime) {
                 userExp = userExp + exp;
@@ -93,16 +114,22 @@ namespace KrulTepasBot {
                     userLevel++;
                     userTotalExp = userTotalExp + userExp;
                     userExp = userTotalExp - ((userLevel - 1) * 100);
+                    EmbedBuilder levelUpEmbed = new EmbedBuilder();
+                    levelUpEmbed.Title = "Level up!";
+                    levelUpEmbed.Description = $"Congrats {message.Author.Mention}, you just levelled up to level {userLevel}!";
+                    var req = await message.ReplyAsync(embed: levelUpEmbed.Build(), allowedMentions: AllowedMentions.None);
+
+                    await req.AddReactionAsync(tada);
                 }
                 else {
                     userTotalExp = userTotalExp + userExp;
                 }
 
                 if(message.MentionedUsers.Count > 0) {
-                    cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime} WHERE userId = {message.MentionedUsers.First().Id}";
+                    cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime}, claimedTime = {claimedTime} WHERE userId = {message.MentionedUsers.First().Id}";
                 }
                 else {
-                    cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime} WHERE userId = {message.Author.Id}";
+                    cmd.CommandText = $"UPDATE users SET lvl = {userLevel}, exp = {userExp}, totalExp = {userTotalExp}, time = {currentTime}, claimedTime = {claimedTime} WHERE userId = {message.Author.Id}";
                 }
                 await cmd.PrepareAsync();
                 await cmd.ExecuteNonQueryAsync();
@@ -114,13 +141,6 @@ namespace KrulTepasBot {
             if(!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)) || message.Author.IsBot) return;
 
             if(message.Author.Id == _client.CurrentUser.Id) return;
-
-
-            /*if(msg == "ping") {
-                var cb = new ComponentBuilder().WithButton("Click me!", "ping", ButtonStyle.Primary);
-
-                await message.Channel.SendMessageAsync("pong!", components: cb.Build());
-            }*/
 
             switch(msg[0]) {
                 case "ping":
@@ -134,6 +154,9 @@ namespace KrulTepasBot {
                     break;
                 case "level":
                     await commands.level(message, userLevel, userExp, userTotalExp, userTime, currentTime);
+                    break;
+                case "daily":
+                    await commands.daily(message, userTokens, userTime, currentTime, claimed);
                     break;
                 default:
                     break;

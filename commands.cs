@@ -74,5 +74,17 @@ namespace KrulTepasBot {
                 await message.ReplyAsync($"You are currently level {userLevel}!\nYou need {100 - userExp} more exp to level up! | You have a total of {userTotalExp} acquired already!\n{time}!", allowedMentions: AllowedMentions.None);
             }
         }
+
+        public static async Task daily(SocketUserMessage message, Int32 userTokens, Int32 userTime, Int32 currentTime, bool claimed) {
+            int secs = (180 - (currentTime - userTime));
+            int min = secs / 60;
+            
+            if(claimed) {
+                await message.ReplyAsync($"You cannot claim your tokens for another {min}:{secs}");
+            }
+            else {
+                
+            }
+        }
     }
 }

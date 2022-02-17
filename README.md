@@ -1,8 +1,14 @@
 <h1 align="center">Welcome to the GitHub page of Krul Tepas bot!</h1>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/Version-Dev-ff69b4" />
+  <a href="https://github.com/liveemily/krultepasbot/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/cyyynthia/pronoundb.org.svg?style=flat-square"/>
+  </a>
   <a href="https://twitter.com/LiveEmilyHere" target="_blank">
     <img alt="Twitter: LiveEmilyHere" src="https://img.shields.io/twitter/follow/LiveEmilyHere.svg?style=social" />
+  </a>
+  <a href="https://ko-fi.com/liveemily">
+    <img src="https://www.ko-fi.com/img/githubbutton_sm.svg" />
   </a>
 </p>
 
